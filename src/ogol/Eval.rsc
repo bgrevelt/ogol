@@ -36,10 +36,32 @@ alias Turtle = tuple[int dir, bool pendown, Point position];
 alias State = tuple[Turtle turtle, Canvas canvas];
 
 // Top-level eval function
+// todo: Can't seem to get this to work
+//FunEnv collectFunDefs(Program p)
+//  = ( f.id: f | /FunDef f := p );
+// but that lead to an error on f.id. It seems like I should somehow name the FunId part of the FunDef "id"
+// but I don't know how to do that
+
+// So I tried to use pattern matching like this
+//FunEnv collectFunDefs(Program p)
+//  = ( fid: f | f:(Program)`to <FunId fid> <VarId* vids> <Command* cmds> end` := p )
+// which detect the FunDef ok, but since we match it as a program it complains that I'm returning
+// a map[FunId, Program] instead of a map[FunId, FunDef]. 
+// This boils down to the same problem I have with desugar: If I match something as a Program, I know
+// it is a list of commands, but I can't seem to find out how to work on it like a list of commands.
+// Here we have detected a FunDef, but again I don't know how to work with it as a FunDef afterwards
+// FunEnv collectFunDefs(Program p)
+// = ( fid: f | f:(FunDef)`to <FunId fid> <VarId* vids> <Command* cmds> end` := p )
+// will not work either we have alreadt declared p a Program
+
+
 FunEnv collectFunDefs(Program p)
-  = ( f.id: f | /FunDef f := p );
+  = ( f.id: f | /FunDef f := p ); 		 
+
+   
 
 Canvas eval(p:(Program)`<Command* cmds>`) {
+// todo: How do I desugar here?!
   funenv = collectFunDefs(p);
   varEnv = ();
   state = <<0, false, <0,0>>, []>; 
@@ -51,11 +73,67 @@ Canvas eval(p:(Program)`<Command* cmds>`) {
   return state.canvas;
 }
 
-//State eval((Command)`<FunId funcName> <Expr* args>;`, FunEnv fenv, VarEnv venv, State state) 
-//{
-//	f = fenv[funcName];
-//	return <<0, false, <0,0>>, []>; 
-//}
+State eval((Command)`<FunId funcName> <Expr* args>;`, FunEnv fenv, VarEnv venv, State state) 
+{
+	f = fenv[funcName];
+	return <<0, false, <0,0>>, []>; 
+}
+
+State eval((Command)FunDef, FunEnv fenv, VarEnv venv, State state)
+{
+	// Should we do anything here? It's only the definition and we already filled the FunEnv...
+	return state;
+}
+
+State eval((Command)`<FunId fid> <Expr* Exs>`, FunEnv fenv, VarEnv venv, State state)
+{
+return state;
+}
+
+State eval((Command)`if <Expr ex> [<Command* cmds>]`, FunEnv fenv, VarEnv venv, State state)
+{
+	if(boolean(exec) := eval(ex, venv) && exec)
+	{
+		for (c <- cmds) {
+    		state = eval(c, fenv, venv, state);
+    } 
+  }
+	return state;
+}
+
+State eval((Command)`ifelse <Expr ex> [<Command* cmdsYes>] [<Command* cmdsNo>]`, FunEnv fenv, VarEnv venv, State state)
+{
+	if(boolean(exec) := eval(ex, venv))
+	{
+		if(exec)
+		{
+			for (c <- cmdsYes) {
+    			state = eval(c, fenv, venv, state);
+    		}
+    	}
+    	else
+    	{
+    		for (c <- cmdsNo) {
+    			state = eval(c, fenv, venv, state);
+    		}
+    	}
+    	return state;
+    }   
+}
+
+State eval((Command)`repeat <Expr ex> [<Command* cmds>]`, FunEnv fenv, VarEnv venv, State state)
+{
+	if(number(count) := eval(ex, venv))
+	{
+		for(int i <- [1..round(count)+1]) 
+		{
+			for (c <- cmds) {
+    		state = eval(c, fenv, venv, state);
+    		}
+		}
+		return state;
+    }   
+}
 
 State eval((Command)`home;`, FunEnv fenv, VarEnv venv, State state) 
 {
