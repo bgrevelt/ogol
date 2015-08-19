@@ -16,6 +16,5 @@ Program desugar(Program p){
  	  => (Command)`penup;`
  	  case (Command)`pd;`
  	  => (Command)`pendown;`
- 	  default: p; 
 	};
 }

@@ -131,4 +131,5 @@ public bool Test(t,  str ToTest)
  public void tx1() { renderParsetree(parse(#Program, "home;")); }
  public void tx2() { renderParsetree((Program)`home;`); }
  public void tx3() { renderParsetree((Program)`pendown;`); }
+ public void tx4() { renderParsetree(parse(#Expr, "5.0")); }
   

@@ -53,10 +53,18 @@ alias State = tuple[Turtle turtle, Canvas canvas];
 // FunEnv collectFunDefs(Program p)
 // = ( fid: f | f:(FunDef)`to <FunId fid> <VarId* vids> <Command* cmds> end` := p )
 // will not work either we have alreadt declared p a Program
-
+// Hey, this seems to work!
 
 FunEnv collectFunDefs(Program p)
-  = ( f.id: f | /FunDef f := p ); 		 
+{
+   FunEnv fe =();
+   visit (p)	
+   {
+     case fd:(FunDef)`to <FunId fid> <VarId* vids> <Command* cmds> end`:
+     fe[fid] = fd;
+   } 
+   return fe;     
+}
 
    
 
@@ -73,9 +81,28 @@ Canvas eval(p:(Program)`<Command* cmds>`) {
   return state.canvas;
 }
 
-State eval((Command)`<FunId funcName> <Expr* args>;`, FunEnv fenv, VarEnv venv, State state) 
+State eval(cmd:(Command)`<FunId funcName> <Expr* args>;`, FunEnv fenv, VarEnv venv, State state) 
 {
+	println(args[0]);
+	println(args[1]);
+		
 	f = fenv[funcName];
+	if((FunDef)`to <FunId fid> <VarId* vids> <Command* cmds> end` := f)// && size(vids) == size(args))
+	{
+		int i = 0;
+		println(args[0]);
+		println(args[1]);
+		//println(vids);
+		//for(VarId vid <- vids)
+		//{
+		//	println(vid);
+		//}
+		//for(Expr arg <- args)
+		//{
+		//	println(eval(arg, venv)); 
+		//}
+		//println(cmd);
+	}
 	return <<0, false, <0,0>>, []>; 
 }
 
@@ -83,11 +110,6 @@ State eval((Command)FunDef, FunEnv fenv, VarEnv venv, State state)
 {
 	// Should we do anything here? It's only the definition and we already filled the FunEnv...
 	return state;
-}
-
-State eval((Command)`<FunId fid> <Expr* Exs>`, FunEnv fenv, VarEnv venv, State state)
-{
-return state;
 }
 
 State eval((Command)`if <Expr ex> [<Command* cmds>]`, FunEnv fenv, VarEnv venv, State state)
