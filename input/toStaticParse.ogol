@@ -1,0 +1,31 @@
+blaat 5.0; 
+
+
+to A :x :y 
+	pd; 
+	B :y;
+	C :x;
+end
+
+to B :x
+	forward :x;
+end
+
+to C :x
+ 	if :size >= 5 [
+  	back :x;
+
+    to B end
+	B :x;
+  	]
+	
+end
+
+to D :x
+	ifelse :x >= 4 [
+	C :x;
+	]
+	[
+	B :x;
+	]
+end
